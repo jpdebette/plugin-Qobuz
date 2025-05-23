@@ -984,7 +984,7 @@ sub QobuzManageFavorites {
 			my $isFavorite = grep { $_->{id} eq $albumId } @{$favorites->{albums}->{items}};
 
 			push @$items, {
-				name => cstring($client, $isFavorite ? 'PLUGIN_QOBUZ_REMOVE_FAVORITE_RELEASE' : 'PLUGIN_QOBUZ_ADD_FAVORITE_RELEASE', 'blip'),
+				name => cstring($client, $isFavorite ? 'PLUGIN_QOBUZ_REMOVE_FAVORITE_RELEASE' : 'PLUGIN_QOBUZ_ADD_FAVORITE_RELEASE', $album),
 				url  => $isFavorite ? \&QobuzDeleteFavorite : \&QobuzAddFavorite,
 				passthrough => [{
 					album_ids => $albumId
