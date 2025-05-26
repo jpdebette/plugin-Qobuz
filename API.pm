@@ -424,8 +424,32 @@ sub deleteFavorite {
 	}, $args);
 }
 
+sub subscribePlaylist {
+	my ($self, $cb, $args) = @_;
+
+	$args->{_use_token} = 1;
+	$args->{_nocache}   = 1;
+
+	$self->_get('playlist/subscribe', sub {
+		$cb->(shift);
+		$self->getUserPlaylists(sub{}, undef, undef, 'refresh')
+	}, $args);
+}
+
+sub unsubscribePlaylist {
+	my ($self, $cb, $args) = @_;
+
+	$args->{_use_token} = 1;
+	$args->{_nocache}   = 1;
+
+	$self->_get('playlist/unsubscribe', sub {
+		$cb->(shift);
+		$self->getUserPlaylists(sub{}, undef, undef, 'refresh')
+	}, $args);
+}
+
 sub getUserPlaylists {
-	my ($self, $cb, $user, $limit) = @_;
+	my ($self, $cb, $user, $limit, $force) = @_;
 	
 	my $sortPlaylists = $prefs->get('sortPlaylists') || 0;
 	
@@ -445,6 +469,7 @@ sub getUserPlaylists {
 		_ttl     => QOBUZ_USER_DATA_EXPIRY,
 		_user_cache => 1,
 		_use_token => 1,
+		_wipecache => $force
 	});
 }
 

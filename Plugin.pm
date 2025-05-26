@@ -1599,6 +1599,7 @@ sub QobuzWorkGetTracks {
 sub QobuzPlaylistGetTracks {
 	my ($client, $cb, $params, $args) = @_;
 	my $playlistId = $args->{playlist_id};
+	my $playlistName = $args->{playlist_name};
 
 	getAPIHandler($client)->getPlaylistTracks(sub {
 		my $playlist = shift;
@@ -1614,10 +1615,51 @@ sub QobuzPlaylistGetTracks {
 			push @$tracks, _trackItem($client, $track, $params->{isWeb});
 		}
 
+		getAPIHandler($client)->getUserPlaylists(sub {
+			my $favorites = shift;
+			my $isFavorite = ($favorites && $favorites->{playlists}) ? grep { $_->{id} eq $playlistId } @{$favorites->{playlists}->{items}} : 0;
+
+			unshift @$tracks, {
+				name => cstring($client, $isFavorite ? 'PLUGIN_QOBUZ_REMOVE_FAVORITE_PLAYLIST' : 'PLUGIN_QOBUZ_ADD_FAVORITE_PLAYLIST', $playlistName),
+				url  => $isFavorite ? \&QobuzUnsubscribePlaylist : \&QobuzSubscribePlaylist,
+				image => 'html/images/favorites.png',
+				passthrough => [{
+					playlist_id => $playlistId
+				}],
+				nextWindow => 'parent'
+			};
+		});
+
 		$cb->({
 			items => $tracks,
 		}, @_ );
 	}, $playlistId);
+}
+
+sub QobuzSubscribePlaylist {
+	my ($client, $cb, $params, $args) = @_;
+
+	getAPIHandler($client)->subscribePlaylist(sub {
+		my $result = shift;
+		$cb->({ items => [{
+			name        => cstring($client, 'PLUGIN_QOBUZ_MUSIC_ADDED'),
+			showBriefly => 1,
+			nextWindow  => 'grandparent'
+		}] });
+	}, $args);
+}
+
+sub QobuzUnsubscribePlaylist {
+	my ($client, $cb, $params, $args) = @_;
+
+	getAPIHandler($client)->unsubscribePlaylist(sub {
+		my $result = shift;
+		$cb->({
+			text        => $result->{status},
+			showBriefly => 1,
+			nextWindow  => 'grandparent'
+		});
+	}, $args);
 }
 
 sub _albumItem {
@@ -1701,6 +1743,7 @@ sub _playlistItem {
 		image => $image,
 		passthrough => [{
 			playlist_id  => $playlist->{id},
+			playlist_name  => $playlist->{name},
 		}],
 		type  => 'playlist',
 	};
