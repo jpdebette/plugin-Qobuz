@@ -294,10 +294,6 @@ sub handleFeed {
 		url  => \&QobuzUserFavorites,
 		image => 'html/images/favorites.png'
 	},{
-		name => cstring($client, 'PLUGIN_QOBUZ_USERPLAYLISTS'),
-		url  => \&QobuzUserPlaylists,
-		image => 'html/images/playlists.png'
-	},{
 		name => cstring($client, 'PLUGIN_QOBUZ_PUBLICPLAYLISTS'),
 		url  => \&QobuzPublicPlaylists,
 		image => 'html/images/playlists.png',
@@ -952,6 +948,12 @@ sub QobuzUserFavorites {
 			items => $sortFavsAlphabetically ? [ sort { Slim::Utils::Text::ignoreCaseArticles($a->{$sortFavSongField}) cmp Slim::Utils::Text::ignoreCaseArticles($b->{$sortFavSongField}) } @tracks ] : \@tracks,
 			image => 'html/images/playlists.png',
 		} if @tracks;
+
+		push @$items, {
+			name => cstring($client, 'PLUGIN_QOBUZ_USERPLAYLISTS'),
+			url  => \&QobuzUserPlaylists,
+			image => 'html/images/playlists.png'
+		};
 
 		$cb->( {
 			items => $items
