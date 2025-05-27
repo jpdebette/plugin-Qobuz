@@ -163,7 +163,7 @@ PLUGIN_QOBUZ_ADD_FAVORITE_TRACK
 	DE	Titel '%s' zu den Qobuz-Favoriten hinzufügen
 	EN	Add Track '%s' to Qobuz favorites
 	EN_GB	Add Track '%s' to Qobuz favourites
-	FR	Ajouter la piste "%s" aux favoris Qobuz
+	FR	Ajouter le morceau "%s" aux favoris Qobuz
 	NL	Voeg Nummer '%s' toe aan Qobuz favorieten
 
 PLUGIN_QOBUZ_ADD_FAVORITE_PLAYLIST
@@ -189,7 +189,7 @@ PLUGIN_QOBUZ_REMOVE_FAVORITE_TRACK
 	DE	Titel '%s' aus den Qobuz-Favoriten entfernen
 	EN	Remove Track '%s' from Qobuz favorites
 	EN_GB	Remove Track '%s' from Qobuz favourites
-	FR	Retirer la piste "%s" des favoris Qobuz
+	FR	Retirer le morceau "%s" des favoris Qobuz
 	NL	Verwijder Nummer '%s' van Qobuz favorieten
 
 PLUGIN_QOBUZ_REMOVE_FAVORITE_PLAYLIST
