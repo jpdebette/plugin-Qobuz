@@ -1334,7 +1334,7 @@ sub QobuzGetTracks {
 
 				# insert disc item before the first of its tracks
 				splice @$items, $discs->{$disc}->{index}, 0, {
-					name => $discs->Plugins::Qobuz::API::Common->buildAlbumTitle($disc),
+					name => $discs->$disc->{title},
 					image => 'html/images/albums.png',
 					type => 'playlist',
 					playall => 1,
@@ -1425,7 +1425,7 @@ sub QobuzGetTracks {
 			my $isFavorite = ($favorites && $favorites->{albums}) ? grep { $_->{id} eq $albumId } @{$favorites->{albums}->{items}} : 0;
 
 			push @$items, {
-				name => cstring($client, $isFavorite ? 'PLUGIN_QOBUZ_REMOVE_FAVORITE_RELEASE' : 'PLUGIN_QOBUZ_ADD_FAVORITE_RELEASE', Plugins::Qobuz::API::Common->buildAlbumTitle($album)),
+				name => cstring($client, $isFavorite ? 'PLUGIN_QOBUZ_REMOVE_FAVORITE_RELEASE' : 'PLUGIN_QOBUZ_ADD_FAVORITE_RELEASE', $album->{title}),
 				url  => $isFavorite ? \&QobuzDeleteFavorite : \&QobuzAddFavorite,
 				image => 'html/images/favorites.png',
 				passthrough => [{
@@ -1668,7 +1668,7 @@ sub _albumItem {
 	my ($client, $album) = @_;
 
 	my $artist = $album->{artist}->{name} || '';
-	my $albumName = Plugins::Qobuz::API::Common->buildAlbumTitle($album);
+	my $albumName = $album->{title};
 	my $showYearWithAlbum = $prefs->get('showYearWithAlbum');
 	my $albumYear = $showYearWithAlbum ? $album->{year} || substr($album->{release_date_stream},0,4) || 0 : 0;
 
@@ -1694,11 +1694,6 @@ sub _albumItem {
 		$item->{name} .= $albumYear ? "\n(" . $albumYear . ')' : '';
 	}
 
-	if ( $prefs->get('parentalWarning') && $album->{parental_warning} ) {
-		$item->{name} .= ' [E]';
-		$item->{line1} .= ' [E]';
-	}
-
 	if (!$album->{streamable} || !_isReleased($album) ) {
 		$item->{name}  = '* ' . $item->{name};
 		$item->{line1} = '* ' . $item->{line1};
@@ -1709,7 +1704,7 @@ sub _albumItem {
 	$item->{url}         = \&QobuzGetTracks;
 	$item->{passthrough} = [{
 		album_id => $album->{id},
-		album_title => Plugins::Qobuz::API::Common->buildAlbumTitle($album),
+		album_title => $album->{title},
 	}];
 
 	return $item;
@@ -1754,10 +1749,9 @@ sub _playlistItem {
 sub _trackItem {
 	my ($client, $track, $isWeb) = @_;
 
-	my $title = Plugins::Qobuz::API::Common->addTrackVersionToTitle($track);
+	my $title = $track->{title};
 	my $artist = Plugins::Qobuz::API::Common->getArtistName($track, $track->{album});
-	my $albumTitle  = Plugins::Qobuz::API::Common->buildAlbumTitle($track->{album}) || '';
-	#my $album  = $track->{album}->{title} || '';
+	my $albumTitle = $track->{album}->{title} || '';
 	if ( $albumTitle && $prefs->get('showDiscs') ) {
 		$albumTitle = Slim::Music::Info::addDiscNumberToAlbumTitle($albumTitle,$track->{media_number},$track->{album}->{media_count});
 	}
@@ -1805,11 +1799,6 @@ sub _trackItem {
 
 	if ( $track->{album} ) {
 		$item->{year} = $track->{album}->{year} || substr($track->{$albumTitle}->{release_date_stream},0,4) || 0;
-	}
-
-	if ( $prefs->get('parentalWarning') && $track->{parental_warning} ) {
-		$item->{name} .= ' [E]';
-		$item->{line1} .= ' [E]';
 	}
 
 	if (!$track->{streamable} && (!$prefs->get('playSamples') || !$track->{sampleable})) {
@@ -1947,7 +1936,7 @@ sub albumInfoMenu {
 
 			my $args = {};
 			$args->{albumId} = $qobuzAlbum->{id};
-			$args->{album} = Plugins::Qobuz::API::Common->buildAlbumTitle($qobuzAlbum);
+			$args->{album} = $qobuzAlbum->{title};
 			$args->{artistId} = $qobuzAlbum->{artist}->{id};
 			$args->{artist} = $qobuzAlbum->{artist}->{name};
 			push @$items, {

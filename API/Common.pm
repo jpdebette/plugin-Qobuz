@@ -164,6 +164,11 @@ sub _precacheAlbum {
 		$album->{genre} = $album->{genre}->{name};
 		$album->{image} = __PACKAGE__->getImageFromImagesHash($album->{image}) || '';
 
+		if ($prefs->get('appendAlbumVersionToTitle') && $album->{version}) {
+			$album->{title} .= " ($album->{version})";
+		}
+		addParentalWarningToTitle($album);
+
 		# If the user pref is for classical music enhancements to the display, is this a classical release or has the user added the genre to their custom classical list?
 		$isClassique = 0;
 		if ( $prefs->get('useClassicalEnhancements') ) {
@@ -173,7 +178,7 @@ sub _precacheAlbum {
 		}
 
 		my $albumInfo = {
-			title  => Plugins::Qobuz::API::Common->buildAlbumTitle($album),
+			title  => $album->{title},
 			id     => $album->{id},
 			artist => $album->{artist},
 			image  => $album->{image},
@@ -245,9 +250,14 @@ sub precacheTrack {
 	my $album = $track->{album} || {};
 	$track->{composer} ||= $album->{composer} || {};
 
+	if ($prefs->get('appendTrackVersionToTitle') && $track->{version}) {
+		$track->{title} .= " ($track->{version})";
+	}
+	addParentalWarningToTitle($track);
+
 	my $meta = {
 		title    => $track->{title} || $track->{id},
-		album    => Plugins::Qobuz::API::Common->buildAlbumTitle($album) || '',
+		album    => $album->{title} || '',
 		albumId  => $album->{id},
 		artist   => $class->getArtistName($track, $album),
 		artistId => $album->{artist}->{id} || '',
@@ -296,31 +306,11 @@ sub precacheTrack {
 	return $meta;
 }
 
-sub addTrackVersionToTitle {
-	my ($class, $track) = @_;
-
-	if ($track->{version} && $prefs->get('appendTrackVersionToTitle')) {
-		$track->{title} .= " ($track->{version})";
+sub addParentalWarningToTitle {
+	my ($item) = @_;
+	if ($prefs->get('parentalWarning') && $item->{parental_warning}) {
+		$item->{title} .= " [E]";
 	}
-
-	return $track->{title};
-}
-
-sub buildAlbumTitle {
-	my ($class, $album) = @_;
-	my $albumTitle = $album->{title};
-
-	return addAlbumVersion($albumTitle, $album);
-}
-
-sub addAlbumVersion {
-	my ($albumTitle, $album) = @_;
-
-	if ($prefs->get('appendAlbumVersionToTitle') && $album->{version}) {
-		return $albumTitle . " ($album->{version})";
-	}
-
-	return $albumTitle;
 }
 
 sub getMainArtists {

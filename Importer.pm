@@ -103,7 +103,7 @@ sub scanAlbums {
 			my $albumDetails = $cache->get('album_with_tracks_' . $album->{id});
 
 			if ($albumDetails && ref $albumDetails && $albumDetails->{tracks} && ref $albumDetails->{tracks} && $albumDetails->{tracks}->{items}) {
-				$progress->update(Plugins::Qobuz::API::Common->buildAlbumTitle($album));
+				$progress->update($album->{title});
 				$class->storeTracks([
 					map { _prepareTrack($albumDetails, $_) } @{ $albumDetails->{tracks}->{items} }
 				], undef, $accountName);
@@ -117,7 +117,7 @@ sub scanAlbums {
 
 		while ( my ($albumId, $timestamp) = each %missingAlbums ) {
 			my $album = Plugins::Qobuz::API::Sync->getAlbum($account->[1], $albumId);
-			$progress->update(Plugins::Qobuz::API::Common->buildAlbumTitle($album));
+			$progress->update($album->{title});
 
 			$album->{favorited_at} = $timestamp;
 			$cache->set('album_with_tracks_' . $albumId, $album, time() + 86400 * 90);
@@ -314,21 +314,18 @@ sub _prepareTrack {
 	my $url = Plugins::Qobuz::API::Common->getUrl(undef, $track) || return;
 	my $ct  = Slim::Music::Info::typeFromPath($url);
 
-	my ($artist, $artistId);
-	
 	my @artistList = Plugins::Qobuz::API::Common->getMainArtists($album);
-	$artist = join($_splitList, map { $_->{name} } @artistList);
-	$artistId = $artistList[0]->{id};   # Only add the primary artist id for now
+	my $artist = join($_splitList, map { $_->{name} } @artistList);
 
 	$album->{release_type} = 'EP' if lc($album->{release_type} || '') eq 'epmini';
 
 	my $attributes = {
 		url          => $url,
-		TITLE        => Plugins::Qobuz::API::Common->addTrackVersionToTitle($track),
+		TITLE        => $track->{title},
 		ARTIST       => $artist,
-		ARTIST_EXTID => 'qobuz:artist:' . $artistId,
-		ALBUM        => Plugins::Qobuz::API::Common->buildAlbumTitle($album),
-		ALBUM_EXTID  => 'qobuz:album:' . $album->{id},
+		ARTIST_EXTID => _buildArtistExtId($artistList[0]), # Only add the primary artist id for now
+		ALBUM        => $album->{title},
+		ALBUM_EXTID  => _buildAlbumExtId($album),
 		TRACKNUM     => $track->{track_number},
 		GENRE        => $album->{genre},
 		SECS         => $track->{duration},
@@ -372,4 +369,14 @@ sub _prepareTrack {
 	return $attributes;
 }
 
-1;
+sub _buildAlbumExtId {
+	my ($album) = @_;
+
+	return 'qobuz:album:' . $album->{id};
+}
+
+sub _buildArtistExtId {
+	my ($artist) = @_;
+
+	return 'qobuz:artist:' . $artist->{id};
+}

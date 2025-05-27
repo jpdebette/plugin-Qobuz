@@ -343,8 +343,6 @@ sub getMetadataFor {
 		$meta->{cover} = Plugins::Qobuz::API::Common->getImageFromImagesHash($meta->{cover});
 	}
 
-	$meta->{title} = Plugins::Qobuz::API::Common->addTrackVersionToTitle($meta);
-
 	# user pref is for enhanced classical music display, and we have a classical release (this is where playlist track titles is set up)
 	if ( $meta->{isClassique} ) {
 		# if the title doesn't already contain the work text
@@ -375,10 +373,6 @@ sub getMetadataFor {
 				$meta->{title} =  $composerSurname . string('COLON') . ' ' . $meta->{title};
 			}
 		}
-	}
-
-	if ( $prefs->get('parentalWarning') && $meta->{parental_warning} ) {
-		$meta->{title} .= ' [E]';
 	}
 
 	if ( $prefs->get('showDiscs') ) {
